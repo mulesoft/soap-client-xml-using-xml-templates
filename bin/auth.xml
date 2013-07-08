@@ -1,0 +1,11 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:con="http://connect.avianis.com/Connect.asmx">
+   <soapenv:Header>
+      <con:AuthenticationHeader>
+         <con:Username>#[sessionVars['avn-username']]</con:Username>
+         <con:Password>#[sessionVars['avn-password']]</con:Password>
+      </con:AuthenticationHeader>
+   </soapenv:Header>
+   <soapenv:Body>
+      <con:AuthenticateUser/>
+   </soapenv:Body>
+</soapenv:Envelope>
