@@ -12,9 +12,6 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		<mulexml:namespace prefix="soap" uri="http://schemas.xmlsoap.org/soap/envelope/" />
 		<mulexml:namespace prefix="con" uri="http://connect.avianis.com/Connect.asmx/" />
 	</mulexml:namespace-manager>
-    <ee:object-store-caching-strategy name="Caching_Strategy" keyGenerationExpression="#[sessionVars['avn-username']]" doc:name="Caching Strategy">
-        <in-memory-store name="Cache Store" entryTTL="600"/>
-    </ee:object-store-caching-strategy>
     <flow name="avianisFlow" doc:name="avianisFlow">
         <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="8081" doc:name="HTTP" path="avn"/>
         <set-session-variable variableName="avn-username" value="${avn.username}" doc:name="Set Username"/>     
@@ -27,10 +24,10 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
     </flow>
     <flow name="getAcctsFlow" doc:name="getAcctsFlow">
     	<http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="8081" path="get-accounts"  doc:name="HTTP"/>
-    	<parse-template location="get-accounts.xml" doc:name="Parse Template"/>
+    	<parse-template location="get-accounts.xml" doc:name="Parse SOAP XML Request"/>
         <cxf:proxy-client doc:name="AVNConnect" payload="envelope">
         </cxf:proxy-client>
-        <message-properties-transformer doc:name="Message Properties" overwrite="true">
+        <message-properties-transformer doc:name="Set HTTP Header(SOAPAction)" overwrite="true">
             <add-message-property key="SOAPAction" value="http://connect.avianis.com/Connect.asmx/GetAccounts"/>
 		</message-properties-transformer>
         <http:outbound-endpoint exchange-pattern="request-response" host="devconnect.avianis.com" port="80" path="Connect.asmx" method="POST" doc:name="HTTP">        	
@@ -38,12 +35,12 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
     </flow>
     <flow doc:name="authFlow" name="authFlow">
         <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="8081" path="auth"  doc:name="HTTP"/>
-            <parse-template location="auth.xml" doc:name="Parse Template"/>
-            <cxf:proxy-client payload="envelope" doc:name="AVNConnect"/>
-            <message-properties-transformer overwrite="true" doc:name="Message Properties">
-                <add-message-property key="SOAPAction" value="http://connect.avianis.com/Connect.asmx/AuthenticateUser"/>
-            </message-properties-transformer>
-            <http:outbound-endpoint exchange-pattern="request-response" host="devconnect.avianis.com" port="80" path="Connect.asmx" method="POST" doc:name="HTTP"/>
-            <mulexml:dom-to-xml-transformer returnClass="java.lang.String"></mulexml:dom-to-xml-transformer>
+        <parse-template location="auth.xml" doc:name="Parse SOAP XML Request"/>
+        <cxf:proxy-client payload="envelope" doc:name="AVNConnect"/>
+        <message-properties-transformer overwrite="true" doc:name="Set HTTP Header(SOAPAction)">
+            <add-message-property key="SOAPAction" value="http://connect.avianis.com/Connect.asmx/AuthenticateUser"/>
+        </message-properties-transformer>
+        <http:outbound-endpoint exchange-pattern="request-response" host="devconnect.avianis.com" port="80" path="Connect.asmx" method="POST" doc:name="HTTP"/>
+        <mulexml:dom-to-xml-transformer returnClass="java.lang.String"></mulexml:dom-to-xml-transformer>
     </flow>
 </mule>
